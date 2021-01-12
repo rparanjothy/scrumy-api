@@ -1,0 +1,7 @@
+*~
+\#*\#
+.\#*
+*.pyc
+*.html
+\__pycache__
+/backup/

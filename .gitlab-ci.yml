@@ -1,0 +1,46 @@
+stages:
+  - build_and_publish
+  # - build_and_publish_to_production
+
+variables:
+  DOCKER_IMAGE_NAME: "rparanjo/scrumy-api"
+  DOCKER_IMAGE_TAG: "${DOCKER_IMAGE_NAME}:${CI_BUILD_REF}"
+  DOCKER_MASTER_TAG: "${DOCKER_IMAGE_NAME}"
+
+  # next two are for unsecure docker repo access
+  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: ""
+
+services:
+  - name: chasehoffman/briefcaseglass:19.03.5-dind-test
+    alias: docker
+
+before_script:
+  ##
+  ## Docker login
+  ## log in to the gitlab docker repository from the build slave
+  ##
+  - docker login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" ${CI_REGISTRY}
+  - docker info
+
+publish:staging:
+  image: docker:19.03.5
+  stage: build_and_publish
+  tags:
+    - docker
+    - linux
+  script:
+    - docker build -t ${CI_REGISTRY}/${DOCKER_IMAGE_TAG} -f Dockerfile .
+    - docker push ${CI_REGISTRY}/${DOCKER_IMAGE_TAG}
+# publish:production:
+#   image: docker:19.03.5
+#   stage: build_and_publish_to_production
+#   tags:
+#     - docker
+#     - linux
+#   only:
+#     - master
+#   when: manual
+#   script:
+#     - docker build -t ${CI_REGISTRY}/${DOCKER_MASTER_TAG} -f Dockerfile .
+#     - docker push ${CI_REGISTRY}/${DOCKER_MASTER_TAG}
